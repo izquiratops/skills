@@ -5,7 +5,7 @@ description: "Capture iOS Simulator screenshots to investigate UI, compare befor
 
 # Simulator screenshots
 
-Use Apple's native tools to capture the simulator display. No helper script, Python, or third-party package is required. Run commands on the Mac that hosts the simulator, with Xcode selected and its simulator runtime installed.
+Run commands on the Mac that hosts the simulator, with Xcode selected and its simulator runtime installed.
 
 ## 1. Select the device and evidence
 

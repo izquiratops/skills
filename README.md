@@ -5,7 +5,7 @@ Portable workflows for coding agents.
 ## Available skills
 
 - [swarm](skills/swarm/SKILL.md): coordinate parallel workers for partitioned work or competing solutions, then return one consolidated report.
-- [simulator-screenshots](skills/simulator-screenshots/SKILL.md): capture iOS Simulator screenshots for UI investigation, before-and-after comparisons, and pull request evidence. Uses native Apple tools; no helper scripts or Python.
+- [simulator-screenshots](skills/simulator-screenshots/SKILL.md): capture iOS Simulator screenshots for UI investigation, before-and-after comparisons, and pull request evidence.
 
 ## Use
 
