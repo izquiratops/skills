@@ -11,15 +11,15 @@ Portable workflows for coding agents.
 
 Copy a complete skill directory from `skills/` into the skills directory supported by your agent. Keep its references and any license files together.
 
-`swift-best-practices` is available for automatic discovery during Swift coding and review tasks. It does not require a specific editor. It leaves framework-specific design and mechanical formatting to other guidance and your configured tools.
+Invoke `swift-best-practices` for Swift coding and review tasks. Its examples target Swift 6 language mode; keep each project's supported compiler and language-mode settings. It leaves framework-specific design and mechanical formatting to other guidance and your configured tools.
 
 Use your agent's documented skill invocation mechanism to run `swarm`. It uses the worker tools available in your environment and does not require a specific editor or orchestrator. If independent workers are unavailable, it asks before switching to sequential execution.
 
-See the [swarm attribution](skills/swarm/SKILL.md#swarm) and [MIT license](skills/swarm/LICENSE) for its origin and terms. The Swift skill lists its sources in [SKILL.md](skills/swift-best-practices/SKILL.md#sources).
+See the [swarm attribution](skills/swarm/SKILL.md#swarm) and [MIT license](skills/swarm/LICENSE) for its origin and terms. The Swift skill includes [patterns](skills/swift-best-practices/references/patterns.md) and [concurrency](skills/swift-best-practices/references/concurrency.md) references.
 
 ## Verification
 
-For Swift examples, links, and discovery metadata, run:
+For Swift examples, links, and skill metadata, run:
 
 ```sh
 python3 tests/swift-best-practices/verify.py --check-style

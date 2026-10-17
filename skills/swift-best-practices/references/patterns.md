@@ -1,10 +1,10 @@
 # Swift patterns
 
-Use these examples to resolve the corresponding rules in [SKILL.md](../SKILL.md). Each Swift block is self-contained and targets Swift 6 language mode without additional upcoming-feature flags. Adapt it to the project's supported settings; an example is not a migration instruction.
+Examples for the rules in [SKILL.md](../SKILL.md). Code blocks are self-contained and target Swift 6 language mode without upcoming-feature flags. Keep a project's existing compiler and language-mode constraints when applying them.
 
-## Call-site clarity and effects
+## Call-site clarity
 
-Name parameters for their role. Keep labels that disambiguate use. Mutation and a returned copy should be distinguishable without inspecting the implementation.
+Name a parameter for its role. Use labels when they make a call unambiguous. Distinguish a mutating method from one that returns a copy.
 
 ```swift
 struct Playlist {
@@ -34,13 +34,11 @@ func demonstratePlaylist() {
 }
 ```
 
-`remove(at:)` takes an index, not a track to search for. Its caller must supply a valid index. Do not add a meaningless optional result to disguise a programming error in an API whose contract requires a valid index.
+`remove(at:)` requires a valid index; an optional return would hide a violated precondition. Prefer labeled default parameters to a family of near-identical overloads. Swift already has argument labels: add an options type only when the arguments form a useful value of their own.
 
-Prefer defaulted, labeled parameters over families of nearly identical overloads. Keep positional arguments where Swift's conventions make them clear; Swift argument labels already solve much of the problem that object arguments solve in TypeScript.
+## Valid states
 
-## Distinct states and exhaustive handling
-
-An enum associates each state with exactly the data that belongs to it. Avoid a `loading` flag plus unrelated optional result and error fields.
+Don't combine a `loading` flag with optional results and an optional error. Those fields permit contradictory states. Use an enum with data attached to the case that owns it.
 
 ```swift
 struct SearchResult {
@@ -68,11 +66,11 @@ func statusText(for state: SearchState) -> String {
 }
 ```
 
-The switch deliberately has no `default`: a new case must receive explicit handling. An external nonfrozen enum may gain cases without recompiling its library. Handle its known cases and add `@unknown default` with an intentional fallback; do not mechanically add that branch to every enum switch.
+Switch over every case of an enum you own. Omit `default` so a new case requires a decision. For an external nonfrozen enum, handle known cases and give `@unknown default` an intentional fallback.
 
-## Absence, failure, and the simplest useful type
+## Simplest useful type
 
-Return an optional when absence is part of the answer. Use a throwing function when callers need to distinguish reasons for failure. Keep a plain collection when empty input has valid behavior.
+Use an optional when absence is a valid answer. Throw when callers need the reason for failure. Keep a plain collection when empty input has valid behavior.
 
 ```swift
 func newestEntry(in entries: [String]) -> String? {
@@ -99,15 +97,13 @@ func readPort(from environment: [String: String]) throws -> UInt16 {
 }
 ```
 
-An empty list has a valid total; a nonempty wrapper would add no useful guarantee here. Conversely, do not replace a required result with an optional just to avoid explaining an invariant. Strengthen the input or explicitly handle absence according to the domain.
+Don't wrap `total`'s input in a nonempty type: zero is the right result for an empty array. Don't make a required result optional merely to avoid enforcing its invariant. Choose an input that carries the invariant, or handle absence explicitly.
 
-Use `try?` when all failures genuinely mean the same thing, such as an optional best-effort cache lookup. Preserve the error when callers need to diagnose or recover. A placeholder empty string, empty collection, or zero can turn a failure into a misleading success.
-
-A forced operation is appropriate only when its invariant is established and visible, such as a validated fixture or framework-required initialization contract. Document the reason and test that contract. External data and ordinary recoverable errors need checked handling.
+Use `try?` only when every failure has the same meaning to the caller. An empty string or zero returned after a failed parse can look like success. Force-unwrap or use `try!` only with a locally established invariant, such as a validated fixture; state and test that invariant.
 
 ## Checked conversions
 
-`as?` checks a dynamic cast. Handle its optional result. `as` can safely bridge types or perform a compiler-checked coercion; it does not promise arbitrary data has a desired shape.
+Use `as?` for a cast that can fail. Swift's `as` performs compiler-checked coercion or bridging; it is not an unchecked TypeScript assertion. Use a type annotation when a literal already has the type you need.
 
 ```swift
 import Foundation
@@ -128,11 +124,11 @@ struct LayoutMetrics {
 }
 ```
 
-Use `Any` only at genuinely untyped interfaces, such as legacy interoperability. Prefer a typed interface inside Swift code. Numeric literals infer different types from context: an annotation can express the intended type without a cast.
+Keep `Any` at genuinely untyped boundaries, such as legacy interoperability. Pass a typed value onward.
 
-## Typed boundaries and validated construction
+## Validate at the boundary
 
-`JSONDecoder` checks the decoded representation. Domain validation is a separate step. This example requires a positive identifier; a syntactically valid JSON integer can still violate that requirement.
+Decode the wire shape, then check domain invariants. `Decodable` checks the representation; it does not prove that a decoded integer is a valid identifier.
 
 ```swift
 import Foundation
@@ -176,21 +172,17 @@ func decodeAccount(from data: Data) throws -> Account {
 }
 ```
 
-Give a domain wrapper validated construction when its invariant matters. A `typealias` names a type but does not distinguish identifiers from other values of that type. Do not add wrappers without a concrete benefit.
+Keep the payload at the boundary; pass `Account` inward. A `typealias` cannot prevent mixing identifiers with other integers. Add a wrapper when it protects a real invariant. If `AccountID` becomes `Decodable`, implement decoding through its validating initializer: synthesized decoding does not call `init?(rawValue:)`.
 
-Keep the payload private to the boundary. Pass the validated domain value onward instead of repeatedly decoding or checking the same identifier. Do not add synthesized `Decodable` conformance to `AccountID` without preserving its validation in `init(from:)`: synthesized decoding would bypass `init?(rawValue:)`.
+## Values and identity
 
-## Values, identity, and mutation
+Use structs and enums for independent values. Use a class when shared identity or a reference lifetime is required. A struct that stores a class still shares that object. Mark classes `final` when subclassing is not part of the contract.
 
-Choose structs/enums for independent values. A struct containing a class reference still shares the referenced object unless its design provides value semantics. Choose a class when identity or a reference lifetime is part of the requirement; use `final` when subclassing is not intended.
+`let` prevents rebinding a class reference, not mutation of the object. Use `private(set)` to expose readable state while keeping writes inside the type. Inject dependencies through initializers when ownership or tests need it; add a protocol when callers need an interchangeable contract.
 
-`let` prevents rebinding a class reference, not changes to the referenced object. `private(set)` can expose readable state while restricting mutation to the type's implementation. A read-only reference property alone does not make the referenced object read-only.
+## Closure captures
 
-Inject dependencies through initializers when that makes ownership and tests explicit. Prefer a concrete dependency until callers need an interchangeable contract. A protocol for every class or a singleton for every service adds abstraction without establishing a useful boundary.
-
-## Ownership and closure captures
-
-Draw the retention path before choosing a capture list. Here, the owner retains the event source, the source retains the callback, and a strong callback capture would retain the owner. A weak capture breaks that cycle; events after the owner disappears can legitimately do nothing.
+Trace the retention path before choosing a capture list. Here the counter owns the source; the source owns its callback. A strong capture of the counter would complete a cycle. A weak capture lets events after release do nothing.
 
 ```swift
 @MainActor
@@ -216,20 +208,12 @@ final class EventCounter {
 }
 ```
 
-`[weak self]` is not a default for every closure. Strong capture can be correct when work must retain its owner until completion. Nonescaping closures usually do not create a lasting ownership cycle. `unowned` requires a lifetime guarantee on every access; it traps if the referent has already been destroyed.
+Don't add `[weak self]` to every closure. A strong capture can be correct when work must retain its owner. Use `unowned` only when every access has a lifetime guarantee; otherwise it can trap. For retained tasks, see [task lifetime and cancellation](concurrency.md#task-lifetime-and-cancellation).
 
-An owner that retains a task can participate in a similar cycle. For task captures and cancellation, also read [concurrency](concurrency.md#task-lifetime-and-cancellation).
+## API contracts
 
-## Contracts and collection costs
+Document public behavior, meaningful absence, errors, side effects, and nonobvious costs with `///`. Explain the complexity of a computed property that is not O(1). Internal comments explain decisions and invariants.
 
-Use `///` for public API contracts: behavior, meaningful absence, errors, side effects, and performance callers cannot infer. An internal comment should explain a decision or invariant. Prefer methods for substantial work; if a computed property is not O(1), document its complexity.
+## Collection indices
 
-Iterate elements directly when you need elements. Use a collection's `indices` when you need valid indices. Use `enumerated()` for an ordinal plus an element, not as a source of indices into arbitrary collections or slices. Avoid integer arithmetic on `String.Index` and assumptions that a slice starts at zero.
-
-## Sources
-
-- [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/): naming, argument labels, documentation, and complexity.
-- [Enumerations](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/enumerations/), [Error Handling](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/errorhandling/), and [Type Casting](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/typecasting/).
-- [Structures and Classes](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/classesandstructures/) and [Automatic Reference Counting](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/automaticreferencecounting/).
-- [Encoding and Decoding Custom Types](https://developer.apple.com/documentation/foundation/archives_and_serialization/encoding_and_decoding_custom_types).
-- [Microsoft's Swift guide](https://github.com/microsoft/swift-guide): additional input on early exits, immutability, documentation, and dependency injection. Examples and rules here are independently written.
+Iterate elements when you need elements. Use `indices` when you need valid indices. `enumerated()` gives ordinals, not indices into an arbitrary collection or slice. Use `first` for an optional first element; use `String.Index` rather than integer offsets for strings.

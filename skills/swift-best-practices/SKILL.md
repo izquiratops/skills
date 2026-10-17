@@ -1,18 +1,13 @@
 ---
 name: swift-best-practices
 description: "Swift correctness and API design guardrails. Use when implementing, debugging, refactoring, or reviewing Swift code in projects or scripts. Not for unrelated work in a repository that contains Swift."
+paths: ["**/*.swift"]
+disable-model-invocation: true
 ---
 
 # Swift best practices
 
-Use these rules for language-level decisions. Leave SwiftUI, UIKit/AppKit, and other framework-specific design to their own guidance.
-
-## Compatibility and scope
-
-- **Modern by default, compatible by constraint.** Inspect the relevant package manifest, Xcode build settings, toolchain pin, or script invocation. Compiler version, Swift language mode, deployment targets, and concurrency settings are separate constraints. Use current idioms that all supported configurations accept.
-- For new projects or scripts without established constraints, choose the current stable Swift toolchain and language mode with full data-race checking. Check current official release guidance rather than hard-code a version from this skill. Use stable features; explain compatibility trade-offs before choosing minimum operating-system versions.
-- Get approval before changing an existing project's compatibility or concurrency settings. Solve diagnostics within those settings rather than suppressing checks or silently migrating the project.
-- Apply rules to the requested change and directly affected behavior. Keep unrelated cleanup separate. Let repository configuration, SwiftLint, and SwiftFormat own mechanical style.
+Target Swift 6 by default; keep an existing project's supported compiler and language-mode settings.
 
 ## Rules
 
@@ -37,15 +32,3 @@ Use these rules for language-level decisions. Leave SwiftUI, UIKit/AppKit, and o
 
 - Read [patterns](references/patterns.md) when applying or reviewing API design, state modeling, absence/failure handling, conversions, ownership, or boundary validation and the rule's application is not straightforward.
 - Read [concurrency](references/concurrency.md) when implementing or reviewing async functions, tasks, actors, shared mutable state, cancellation, or concurrency diagnostics.
-
-## Editing and review
-
-During implementation, add focused checks for the behavior you change. Use the project's supported build/test commands and configured lint/format checks. Verify user-visible behavior on its actual surface where relevant. State what ran and what remains unverified; a successful compile does not prove ownership or concurrency behavior.
-
-During review, use the requested review scope. A change review covers the diff and affected behavior; a broader review covers the requested area. Report concrete defects with their failure condition and impact. Keep optional design suggestions separate, with their benefit and trade-off. A preference alone is not a defect. Report issues without automatically rewriting code or duplicating formatter diagnostics.
-
-## Sources
-
-Primary authority: [Swift API Design Guidelines](https://www.swift.org/documentation/api-design-guidelines/) and [The Swift Programming Language](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/). Topic-specific sources appear in the references.
-
-Additional input: [Microsoft's Swift coding conventions](https://github.com/microsoft/swift-guide) (documentation: CC BY 4.0; code: MIT). Its team conventions and historical examples are not universal requirements. The compact rule-table and disclosed-example structure is inspired by [Cursor's TypeScript best practices skill](https://github.com/cursor/plugins/tree/main/pstack/skills/typescript-best-practices). The Swift examples here are original.

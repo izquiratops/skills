@@ -49,12 +49,12 @@ def check_documents():
     main = (SKILL / "SKILL.md").read_text()
     frontmatter = main.split("---", 2)[1]
     assert "name: swift-best-practices" in frontmatter
-    assert "disable-model-invocation" not in frontmatter
-    assert "paths:" not in frontmatter, "Keep editor-specific metadata out"
+    assert "disable-model-invocation: true" in frontmatter
+    assert 'paths: ["**/*.swift"]' in frontmatter
     description = re.search(r'^description: "(.+)"$', frontmatter, re.M).group(1)
     assert len(description) <= 1024
     assert "projects or scripts" in description
-    print(f"PASS: {len(docs)} documents, local links, anchors, and discovery metadata")
+    print(f"PASS: {len(docs)} documents, local links, anchors, and skill metadata")
 
 
 # Appended to individual examples, not shipped as part of the skill's guidance.
